@@ -36,14 +36,6 @@ def GRPOTrain(model, train_dataloader, reward_func, tokenizer, save_path, epochs
                 out_sequences = outputs[:, prompt_length:]              
                 full_attention_mask = (outputs != tokenizer.eos_token_id).long()
                 completion_mask = full_attention_mask[:, prompt_length:]  
-    
-                old_logits = model(outputs, attention_mask=full_attention_mask).logits
-                old_logits = old_logits[:, prompt_length-1:-1, :]         
-                old_per_token_logps = F.log_softmax(old_logits, dim=-1)
-                old_per_token_logps = old_per_token_logps.gather(
-                    2, out_sequences.unsqueeze(-1)
-                ).squeeze(-1)                                             
-                old_per_token_logps = old_per_token_logps.detach()
                 
                 ref_logits = ref_model(outputs, attention_mask=full_attention_mask).logits
                 ref_logits = ref_logits[:, prompt_length-1:-1, :]         
@@ -63,7 +55,9 @@ def GRPOTrain(model, train_dataloader, reward_func, tokenizer, save_path, epochs
             per_token_logps = F.log_softmax(new_logits, dim=-1)
             per_token_logps = per_token_logps.gather(
                 2, out_sequences.unsqueeze(-1)
-            ).squeeze(-1)                                                
+            ).squeeze(-1)            
+
+            old_per_token_logps = per_token_logps.detach()
     
             policy_ratio = torch.exp(per_token_logps - old_per_token_logps)  
             clip_policy_ratio = torch.clamp(policy_ratio, 1 - epsilon, 1 + epsilon)

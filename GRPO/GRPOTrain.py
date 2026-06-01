@@ -3,7 +3,7 @@ from torch.optim import AdamW
 import torch.nn.functional as F
 from copy import deepcopy
 
-def GRPOTrain(model, train_dataloader, reward_func, save_path, epochs, lr=1e-5, beta=0.04, epsilon=0.2, G=8, max_tokens=512, temperature=0.3, monit_steps=20, run=None):
+def GRPOTrain(model, train_dataloader, reward_func, tokenizer, save_path, epochs, lr=1e-5, beta=0.04, epsilon=0.2, G=8, max_tokens=512, temperature=0.3, monit_steps=20, run=None):
     ref_model = deepcopy(model)
     for param in ref_model.parameters():
         param.requires_grad = False
